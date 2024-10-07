@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beat Maker</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.39/Tone.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Beat Maker</h1>
+        <div class="controls">
+            <button id="playButton">Play</button>
+            <button id="stopButton">Stop</button>
+        </div>
+        <div class="instrument">
+            <h2>Piano</h2>
+            <button class="piano-key" data-note="C4">C</button>
+            <button class="piano-key" data-note="D4">D</button>
+            <button class="piano-key" data-note="E4">E</button>
+            <!-- Add more keys as needed -->
+        </div>
+        <div class="instrument">
+            <h2>Drums</h2>
+            <button class="drum-pad" data-sound="kick">Kick</button>
+            <button class="drum-pad" data-sound="snare">Snare</button>
+            <button class="drum-pad" data-sound="hihat">Hi-hat</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+    margin: 0;
+}
+
+.container {
+    text-align: center;
+}
+
+.controls, .instrument {
+    margin: 20px;
+}
+
+button {
+    margin: 5px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+const synth = new Tone.Synth().toDestination();
+const drumKit = {
+    kick: new Tone.MembraneSynth().toDestination(),
+    snare: new Tone.NoiseSynth({ noise: { type: 'white' } }).toDestination(),
+    hihat: new Tone.MetalSynth().toDestination()
+};
+
+document.querySelectorAll('.piano-key').forEach(key => {
+    key.addEventListener('click', () => {
+        const note = key.getAttribute('data-note');
+        synth.triggerAttackRelease(note, '8n');
+    });
+});
+
+document.querySelectorAll('.drum-pad').forEach(pad => {
+    pad.addEventListener('click', () => {
+        const sound = pad.getAttribute('data-sound');
+        if (sound === 'kick') {
+            drumKit.kick.triggerAttackRelease('C2', '8n');
+        } else if (sound === 'snare') {
+            drumKit.snare.triggerAttackRelease('8n');
+        } else if (sound === 'hihat') {
+            drumKit.hihat.triggerAttackRelease('8n');
+        }
+    });
+});
+
+let isPlaying = false;
+let loop;
+
+function playBeat() {
+    if (isPlaying) return;
+    isPlaying = true;
+
+    loop = new Tone.Loop(time => {
+        drumKit.kick.triggerAttackRelease('C2', '8n', time);
+        drumKit.snare.triggerAttackRelease('8n', time + 0.5);
+        drumKit.hihat.triggerAttackRelease('8n', time + 0.25);
+    }, '1n').start(0);
+
+    Tone.Transport.start();
+}
+
+function stopBeat() {
+    if (!isPlaying) return;
+    isPlaying = false;
+
+    loop.stop();
+    Tone.Transport.stop();
+}
+
+document.getElementById('playButton').addEventListener('click', playBeat);
+document.getElementById('stopButton').addEventListener('click', stopBeat);
